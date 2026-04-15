@@ -73,28 +73,6 @@ This project simulates and analyzes long-term climate data (65 years / 780 month
 └── README.md    # Project documentation
 ```
 
----
-
-## ▶️ How to Run
-
-1. Download or clone the repository:
-
-   ```bash
-   git clone https://github.com/your-username/weather-dashboard.git
-   ```
-
-2. Open the project folder
-
-3. Double-click:
-
-   ```
-   index.html
-   ```
-
-✅ No installation required — runs entirely in your browser.
-
----
-
 ## 📊 Data Model
 
 The simulated dataset mimics real climate behavior:
@@ -141,16 +119,9 @@ This project demonstrates how to:
 
 ## 📸 Preview
 
-*(Add screenshots here if you want — GitHub will render them nicely)*
+https://weather-analysis-dashboard-mn.netlify.app/
 
 ---
-
-## 📜 License
-
-This project is open-source and available under the **MIT License**.
-
----
-
 ## 🙌 Acknowledgements
 
 * Inspired by MATLAB-based climate data analysis workflows
