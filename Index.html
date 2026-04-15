@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Full Weather Dashboard</title>
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<style>
+  body { font-family: Arial; }
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .plot { height: 250px; }
+  table, th, td { border: 1px solid black; border-collapse: collapse; padding: 4px; }
+</style>
+</head>
+
+<body>
+
+<h2>🌦️ Weather Analysis Dashboard (MATLAB → JS)</h2>
+<button onclick="generate()">Generate New Data</button>
+
+<h3>Main Time Series</h3>
+<div id="main1"></div>
+<div id="main2"></div>
+<div id="main3"></div>
+
+<h3>Monthly Subplots (Mean)</h3>
+<div id="gridMean" class="grid"></div>
+
+<h3>Monthly Subplots (Max)</h3>
+<div id="gridMax" class="grid"></div>
+
+<h3>Monthly Subplots (Min)</h3>
+<div id="gridMin" class="grid"></div>
+
+<h3>Monthly Statistics</h3>
+<div id="tables"></div>
+
+<script>
+function randn() {
+  return Math.sqrt(-2*Math.log(Math.random())) * Math.cos(2*Math.PI*Math.random());
+}
+
+function mean(arr){ return arr.reduce((a,b)=>a+b,0)/arr.length; }
+function std(arr){
+  let m = mean(arr);
+  return Math.sqrt(mean(arr.map(x => (x-m)**2)));
+}
+function median(arr){
+  let s=[...arr].sort((a,b)=>a-b);
+  let mid=Math.floor(s.length/2);
+  return s.length%2 ? s[mid] : (s[mid-1]+s[mid])/2;
+}
+function mode(arr){
+  let freq={}; let max=0; let val=null;
+  arr.forEach(x=>{freq[x]=(freq[x]||0)+1; if(freq[x]>max){max=freq[x]; val=x;}});
+  return val;
+}
+
+function fillMissing(data){
+  let filled=[...data];
+  for(let i=0;i<data.length;i++){
+    if(isNaN(data[i])){
+      let m=i%12;
+      let vals=[];
+      for(let j=m;j<data.length;j+=12){
+        if(!isNaN(data[j])) vals.push(data[j]);
+      }
+      filled[i]=mean(vals);
+    }
+  }
+  return filled;
+}
+
+function polyfit(x,y){
+  let n=x.length;
+  let sx=0, sy=0, sxy=0, sxx=0;
+  for(let i=0;i<n;i++){
+    sx+=x[i]; sy+=y[i];
+    sxy+=x[i]*y[i];
+    sxx+=x[i]*x[i];
+  }
+  let slope=(n*sxy - sx*sy)/(n*sxx - sx*sx);
+  let intercept=(sy - slope*sx)/n;
+  return [slope, intercept];
+}
+
+function generate(){
+
+  const N=780;
+  let t=[...Array(N)].map((_,i)=>i+1);
+
+  let meanT=[], maxT=[], minT=[];
+
+  for(let i=0;i<N;i++){
+    let m=i%12;
+    let seasonal=10*Math.sin(2*Math.PI*m/12);
+
+    let mean=10+seasonal+randn()*2;
+    let max=mean+5+Math.random()*5;
+    let min=mean-5-Math.random()*5;
+
+    if(Math.random()<0.05) mean=NaN;
+    if(Math.random()<0.05) max=NaN;
+    if(Math.random()<0.05) min=NaN;
+
+    meanT.push(mean);
+    maxT.push(max);
+    minT.push(min);
+  }
+
+  let m1=fillMissing(meanT);
+  let m2=fillMissing(maxT);
+  let m3=fillMissing(minT);
+
+  // MAIN PLOTS
+  Plotly.newPlot('main1',[{x:t,y:m1,name:'Mean'}],{title:'Mean Temperature'});
+  Plotly.newPlot('main2',[{x:t,y:m2,name:'Max'}],{title:'Max Temperature'});
+  Plotly.newPlot('main3',[{x:t,y:m3,name:'Min'}],{title:'Min Temperature'});
+
+  function monthlyPlots(container, data, label){
+    let div=document.getElementById(container);
+    div.innerHTML="";
+    for(let m=0;m<12;m++){
+      let vals=[];
+      for(let i=m;i<N;i+=12) vals.push(data[i]);
+
+      let years=[...Array(vals.length)].map((_,i)=>i+1);
+      let fit=polyfit(years, vals);
+      let trend=years.map(x=>fit[0]*x+fit[1]);
+
+      let d=document.createElement("div");
+      d.className="plot";
+      div.appendChild(d);
+
+      Plotly.newPlot(d,[
+        {x:years,y:vals,name:'Data'},
+        {x:years,y:trend,name:'Trend',line:{color:'black'}}
+      ],{title:`Month ${m+1}`, margin:{t:30}});
+    }
+  }
+
+  monthlyPlots("gridMean", m1, "Mean");
+  monthlyPlots("gridMax", m2, "Max");
+  monthlyPlots("gridMin", m3, "Min");
+
+  function statsTable(data, title){
+    let html=`<h4>${title}</h4><table><tr>
+    <th>Month</th><th>Min</th><th>Mean</th><th>Median</th><th>Mode</th><th>Max</th><th>Std</th></tr>`;
+
+    for(let m=0;m<12;m++){
+      let vals=[];
+      for(let i=m;i<N;i+=12) if(!isNaN(data[i])) vals.push(data[i]);
+
+      html+=`<tr>
+        <td>${m+1}</td>
+        <td>${Math.min(...vals).toFixed(2)}</td>
+        <td>${mean(vals).toFixed(2)}</td>
+        <td>${median(vals).toFixed(2)}</td>
+        <td>${mode(vals).toFixed(2)}</td>
+        <td>${Math.max(...vals).toFixed(2)}</td>
+        <td>${std(vals).toFixed(2)}</td>
+      </tr>`;
+    }
+
+    html+="</table>";
+    return html;
+  }
+
+  document.getElementById("tables").innerHTML =
+    statsTable(m1,"Mean Temperature") +
+    statsTable(m2,"Max Temperature") +
+    statsTable(m3,"Min Temperature");
+}
+
+generate();
+</script>
+
+</body>
+</html>
