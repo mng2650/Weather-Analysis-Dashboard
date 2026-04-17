@@ -131,5 +131,4 @@ https://weather-analysis-dashboard-mn.netlify.app/
 
 ## 💡 Author
 
-Your Name
 Michael Nsengiyumva
