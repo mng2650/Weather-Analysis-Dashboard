@@ -107,16 +107,6 @@ This project demonstrates how to:
 
 ---
 
-## 📈 Future Improvements
-
-* Export results to CSV / Excel
-* Adjustable simulation parameters (noise, missing rate)
-* Real-world dataset integration
-* Advanced models (polynomial regression, ARIMA, etc.)
-* UI controls (sliders, filters)
-
----
-
 ## 📸 Preview
 
 https://weather-analysis-dashboard-mn.netlify.app/
