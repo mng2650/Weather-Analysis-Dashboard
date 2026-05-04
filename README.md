@@ -109,7 +109,7 @@ This project demonstrates how to:
 
 ## 📸 Preview
 
-https://weather-analysis-dashboard-mn.netlify.app/
+https://weather-analysis-dashboard-mn.org/
 
 ---
 ## 🙌 Acknowledgements
